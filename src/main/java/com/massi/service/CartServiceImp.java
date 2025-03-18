@@ -94,21 +94,44 @@ public class CartServiceImp implements CartService{
 
     @Override
     public Long calculateCartTotals(Cart cart) throws Exception {
-        return 0L;
+
+        if (cart == null || cart.getItems() == null) {
+            throw new Exception("Cart is empty or null");
+        }
+
+        Long total = 0L;
+
+        for (CartItem cartItem : cart.getItems()) {
+            total += cartItem.getFood().getPrice() * cartItem.getQuantity();
+        }
+
+        return total;
     }
 
     @Override
     public Cart findCartById(Long id) throws Exception {
-        return null;
+
+        Optional<Cart> cartOpt = cartRepository.findById(id);
+        if (cartOpt.isEmpty()) {
+            throw new Exception("CartItem not found");
+        }
+
+        return cartOpt.get();
     }
 
     @Override
-    public Cart findCartByUserId(Long id) throws Exception {
-        return null;
+    public Cart findCartByUserId(String jwt) throws Exception {
+
+        User user = userService.findUserByJwtToken(jwt);
+        return cartRepository.findByCustomerId(user.getId());
     }
 
     @Override
-    public Cart clearCart(Long userId) throws Exception {
-        return null;
+    public Cart clearCart(String jwt) throws Exception {
+
+        Cart cart = findCartByUserId(jwt);
+        cart.getItems().clear();
+
+        return cartRepository.save(cart);
     }
 }
